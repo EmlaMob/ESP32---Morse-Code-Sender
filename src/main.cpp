@@ -22,6 +22,7 @@ void setup() {
     setupMenuPins();
     pinMode(B_MORSE, INPUT_PULLUP);
     Serial.begin(115200);
+    Wire.setClock(400000);
     if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println(F("SSD1306 allocation failed"));
         for(;;);
@@ -45,6 +46,7 @@ void loop() {
         display.setTextColor(SSD1306_WHITE);
         display.println("Sending:");
         display.println("");
+        display.display();
 
         // PRINT RA MAN HINH
     }
@@ -54,7 +56,8 @@ void loop() {
         display.setTextSize(1);
         display.setCursor(0,0);
         display.setTextColor(SSD1306_WHITE);
-        display.println("Getting:");    
+        display.println("Getting:");
+        display.println("");  
         display.display();
     }
 }
