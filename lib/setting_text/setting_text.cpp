@@ -1,4 +1,4 @@
-#include "setting_text.h"
+#include "SETTING_TEXT.h"
 
 
 #define SCREEN_WIDTH 128
