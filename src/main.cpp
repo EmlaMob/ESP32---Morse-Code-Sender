@@ -4,6 +4,7 @@
 #include <Adafruit_SSD1306.h>
 #include <MENU_OLED.h>
 #include <SETTING_TEXT.h>
+#include <string.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -20,13 +21,14 @@ int LOGIN = -1;
 unsigned long Press = 0;
 
 bool isPress = false;
-String sendSeq = "";
-String sendText = "";
+char sendSeq[10] = "";
+char sendText[100] = "";
 unsigned long sendReleaseTime = 0; 
-
 bool isSendPending = false;
-String getSeq = "";
-String decodedText = "";
+
+
+char getSeq[10] = "";
+char decodedText[100] = "";
 unsigned long getRealseTime = 0;
 bool isGetPending = false;
 
@@ -66,9 +68,9 @@ void loop() {
     if(LOGIN == 10){ 
         int buttonState = digitalRead(B_MORSE);
         if(digitalRead(ERASE) == LOW){
-            if(sendText.length() > 0 || sendSeq.length() > 0){
-                sendText = "";
-                sendSeq = "";
+            if(strlen(sendText) > 0 || strlen(sendSeq) > 0){
+                sendText[0] = '\0';
+                sendSeq[0] = '\0';
                 isSendPending = false;
                 delay(200);
             }   else {
@@ -90,11 +92,17 @@ void loop() {
             unsigned long duration = millis() - Press;
             sendReleaseTime = millis();
             isSendPending = true;
-            if(duration > 20 && duration < 250) {
-                sendSeq += ".";
-            }
-            else if(duration >= 250) {
-                sendSeq += "-";
+
+            int len = strlen(sendSeq);
+            if(len < 9) {
+                if(duration > 20 && duration < 250) {
+                    sendSeq[len] = '.';
+                    sendSeq[len+1] = '\0';
+                }
+                else if(duration >= 250) {
+                    sendSeq[len] = '-';
+                    sendSeq[len+1] = '\0';
+                }
             }
             delay(20);
         }
@@ -102,27 +110,36 @@ void loop() {
         if(buttonState == HIGH && isSendPending == true) {
             if(gap > 750 && sendSeq != ""){
                 char decodedChar = '?';
+
                 for(int i = 0; i < 26; i++) {
-                    if(sendSeq == letters[i]){
+                    if(strcmp(sendSeq, letters[i]) == 0){
                         decodedChar = i + 'A';
                         break; 
                     }
                 }
                 if(decodedChar == '?') {
                     for(int i = 0; i < 10; i++) {
-                        if(sendSeq == numbers[i]){
+                        if(strcmp(sendSeq, numbers[i]) == 0){
                             decodedChar = i + '0';
                             break;
                         }
                     }
                 }
-                sendText += decodedChar;
-                sendSeq = "";
+                int textLen = strlen(sendText);
+                if(textLen < 99) {
+                    sendText[textLen] = decodedChar;
+                    sendText[textLen+1] = '\0';
+                }
+                sendSeq[0] = '\0';
                 isSendPending = false;
             }
         }
-        if(buttonState == HIGH && gap > 2000 && sendText.length() > 0 && sendText.charAt(sendText.length()-1) != '/'){
-            sendText += "/";
+        if(buttonState == HIGH && gap > 2000 && strlen(sendText) > 0 && sendText[strlen(sendText) - 1] != '/'){
+            int textLen = strlen(sendText);
+            if(textLen < 99){
+                sendText[textLen] = '/';
+                sendText[textLen+1] = '\0';
+            }
             sendReleaseTime = millis();
         }
         display.clearDisplay();
@@ -136,6 +153,17 @@ void loop() {
     }
     else if (LOGIN == 11) {
         int buttonState = digitalRead(B_MORSE);
+        if(digitalRead(ERASE) == LOW){
+            if(strlen(decodedText) > 0 || strlen(getSeq) > 0){
+                decodedText[0] = '\0';
+                getSeq[0] = '\0';
+                isGetPending = false;
+                delay(200);
+            }   else {
+                LOGIN = 0;
+                delay(200);
+            }
+        }
         if(buttonState == LOW && isPress == false){
             isPress = true;
             Press = millis();
@@ -150,60 +178,73 @@ void loop() {
             unsigned long duration = millis() - Press;
             getRealseTime = millis();
             isGetPending = true;
-            if(duration > 20 && duration <= 250){
-                getSeq += ".";
-            }   else if(duration > 250) {
-                getSeq += '-';
+
+            int len = strlen(getSeq);
+            if(len < 9) {
+                if(duration > 20 && duration < 250) {
+                    getSeq[len] = '.';
+                    getSeq[len+1] = '\0';
+                }
+                else if(duration >= 250) {
+                    getSeq[len] = '-';
+                    getSeq[len+1] = '\0';
+                }
             }
             delay(20);
         }
-
         unsigned long gap = millis() - getRealseTime;
         if(buttonState == HIGH && isGetPending == true) {
-            if(gap > 750 && getSeq != ""){
+            if(gap > 750 && strlen(getSeq) > 0){
                 char decodedChar = '?';
+
                 for(int i = 0; i < 26; i++) {
-                    if(getSeq == letters[i]){
+                    if(strcmp(getSeq, letters[i]) == 0){
                         decodedChar = i + 'A';
                         break; 
                     }
                 }
                 if(decodedChar == '?') {
                     for(int i = 0; i < 10; i++) {
-                        if(getSeq == numbers[i]){
+                        if(strcmp(getSeq, numbers[i]) == 0){
                             decodedChar = i + '0';
                             break;
                         }
                     }
                 }
-                decodedText += decodedChar;
-                getSeq = "";
+                int textLen = strlen(decodedText);
+                if(textLen < 99) {
+                    decodedText[textLen] = decodedChar;
+                    decodedText[textLen+1] = '\0';
+                }
+                getSeq[0] = '\0';
                 isGetPending = false;
             }
         }
-        if(buttonState == HIGH && gap > 1500 && decodedText.length() > 0 && decodedText.charAt(decodedText.length()-1) != ' '){
-            decodedText += " ";
+        if(buttonState == HIGH && gap > 2000 && strlen(decodedText) > 0 && decodedText[strlen(decodedText) - 1] != '/'){
+            int textLen = strlen(decodedText);
+            if(textLen < 99){
+                decodedText[textLen] = '/';
+                decodedText[textLen+1] = '\0';
+            }
             getRealseTime = millis();
         }
-
         display.clearDisplay();
         display.setTextSize(1);
         display.setCursor(0,0);
         display.setTextColor(SSD1306_WHITE);
         display.println("Getting:");
-        display.println("");
-        display.println(getSeq);
-        display.println(decodedText);
+        printCenter(display, getSeq, 10, 2);
+        printDecodeText(display, decodedText, 30);
         display.display();
     }
     if(LOGIN != 10){
-        sendSeq ="";
-        sendText ="";
+        sendSeq[0] = '\0';
+        sendText[0] = '\0';
         isSendPending = false;
     }
     if(LOGIN != 11) {
-        getSeq = "";
-        decodedText = "";
+        getSeq[0] = '\0';
+        decodedText[0] = '\0';
         isGetPending = false;
     }
 }

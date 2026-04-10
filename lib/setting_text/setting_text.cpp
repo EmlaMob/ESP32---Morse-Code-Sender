@@ -1,71 +1,71 @@
 #include "SETTING_TEXT.h"
-
+#include <string.h>
 
 #define SCREEN_WIDTH 128
 
-void printCenter(Adafruit_SSD1306 &display, String text, int y, int textSize) {
+void printCenter(Adafruit_SSD1306 &display, const char* text, int y, int textSize) {
     int16_t x1, y1;
     uint16_t w, h;
     display.setTextSize(textSize);
-    display.getTextBounds(text.c_str(), 0, 0, &x1, &y1, &w, &h);
+    display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
     int cursorX = (SCREEN_WIDTH - w) / 2;
     display.setCursor(cursorX, y);
     display.println(text);
 }
 
-void printDecodeText(Adafruit_SSD1306 &display, String text, int startY) {
-    if (text.length() == 0) return;
-    int charWidthSize2 = 12; 
-    int expectedWidth = text.length() * charWidthSize2;
-    int textSize = 2;
-    if (expectedWidth > SCREEN_WIDTH) {
-        textSize = 1;
-    }
-    
-    display.setTextSize(textSize);
+void printDecodeText(Adafruit_SSD1306 &display, const char* text, int startY) {
+    int len = strlen(text);
+    if(text == 0) return;
 
+    int charWidthSize2 = 12;
+    int textSize = (len * charWidthSize2 > SCREEN_WIDTH) ? 1 : 2;
+
+    display.setTextSize(textSize);
     int charWidth = (textSize == 1) ? 6 : 12;
     int lineHeight = (textSize == 1) ? 8 : 16;
     
     int currentX = 0;
     int currentY = startY;
+    char wordBuffer[20];
 
     int startIdx = 0;
-    while (startIdx < text.length()) {
-        int delimIdx = text.indexOf('/', startIdx);
-        
-        String word = "";
-        String delim = "";
+    while (startIdx < len) {
+        const char* slashPtr = strchr(text + startIdx, '/');
+        int delimIdx = (slashPtr) ? (slashPtr - text) : -1;
+
+        int wordLen;
+        bool hasDelim = false;
 
         if (delimIdx == -1) {
-            word = text.substring(startIdx);
-            startIdx = text.length();
+            wordLen = len - startIdx;
         } else {
-            word = text.substring(startIdx, delimIdx);
-            delim = String(text.charAt(delimIdx));
-            startIdx = delimIdx + 1;
+            wordLen = delimIdx - startIdx;
+            hasDelim = true;
         }
 
-        int wordWidth = word.length() * charWidth;
-        int delimWidth = delim.length() * charWidth;
+        strncpy(wordBuffer, text + startIdx, wordLen);
+        wordBuffer[wordLen] = '\0';
 
-        if (currentX + wordWidth > SCREEN_WIDTH && currentX > 0) {
+        if (currentX + (wordLen * charWidth) > SCREEN_WIDTH && currentX > 0) {
             currentX = 0;
             currentY += lineHeight;
         }
 
         display.setCursor(currentX, currentY);
-        display.print(word);
-        currentX += wordWidth;
+        display.print(wordBuffer);
+        currentX += (wordLen * charWidth);
 
-        if (delim != "") {
-            if (currentX + delimWidth > SCREEN_WIDTH) {
+        if (hasDelim) {
+            if (currentX + charWidth > SCREEN_WIDTH) {
                 currentX = 0;
                 currentY += lineHeight;
             }
             display.setCursor(currentX, currentY);
-            display.print(delim);
-            currentX += delimWidth;
+            display.print("/");
+            currentX += charWidth;
+            startIdx = delimIdx + 1;
+        }   else {
+            startIdx = len;
         }
     }
 }
