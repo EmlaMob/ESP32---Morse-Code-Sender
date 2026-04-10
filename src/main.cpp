@@ -2,8 +2,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <menu_oled.h>
-#include <setting_text.h>
+#include <MENU_OLED.h>
+#include <SETTING_TEXT.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64

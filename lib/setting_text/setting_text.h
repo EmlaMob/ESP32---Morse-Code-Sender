@@ -1,5 +1,5 @@
-#ifndef setting_text
-#define setting_text
+#ifndef SETTING_TEXT_H
+#define SETTING_TEXT_H
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
