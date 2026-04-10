@@ -52,14 +52,12 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         delay(200);
     };
     if (back == LOW) {
-        if(LOGIN >= 10){
-            LOGIN = 0;
-        } else {
+        if(LOGIN < 10){
             LOGIN = -1;
+            selected = 0;
+            needRedraw = true;
+            delay(200);
         }
-        selected = 0;
-        needRedraw = true;
-        delay(200);
     };
     if(needRedraw == false) return;
     const char *options[3] = {
@@ -101,9 +99,11 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
             if(i == (selected % 2)) {
             display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
             display.println(subOptions[i]);
+            display.println("");
             } else {
             display.setTextColor(SSD1306_WHITE);
             display.println(subOptions[i]);
+            display.println("");
             }
             display.println("");
         }
