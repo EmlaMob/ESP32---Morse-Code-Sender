@@ -6,7 +6,7 @@
 #define BACK 13
 
 static int selected = 0;
-static bool needRedraw = true;
+static bool Refresh = true;
 static int lastLogin = -2;
 
 void setupMenuPins(){
@@ -23,20 +23,20 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
     int back = digitalRead(BACK);
 
     if (LOGIN != lastLogin) {
-        needRedraw = true;
+        Refresh = true;
         lastLogin = LOGIN;
     };
 
     if (up == LOW) {
         selected = selected - 1;
         if(selected < 0) selected = 2;
-        needRedraw = true;
+        Refresh = true;
         delay(200);
     };
     if (down == LOW) {
         selected = selected + 1;
         if(selected > 2) selected = 0;
-        needRedraw = true;
+        Refresh = true;
         delay(200);
         };
     if (enter == LOW) {
@@ -48,18 +48,18 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
             if(selected == 1) LOGIN = 11;
             selected = 0;
         }
-        needRedraw = true;
+        Refresh = true;
         delay(200);
     };
     if (back == LOW) {
         if(LOGIN < 10){
             LOGIN = -1;
             selected = 0;
-            needRedraw = true;
+            Refresh = true;
             delay(200);
         }
     };
-    if(needRedraw == false) return;
+    if(Refresh == false) return;
     const char *options[3] = {
         " Send, get Morse",
         " Test Morse",
@@ -109,22 +109,5 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         }
         display.display();
     }
-    else if (LOGIN == 1) {
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.println(F("Testing:"));
-        display.println("");
-        display.display();
-    } else if (LOGIN == 2){
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.println(F("Studying:"));
-        display.println("");
-        display.display();
-    }
-    needRedraw = false;
+    Refresh = false;
 }
