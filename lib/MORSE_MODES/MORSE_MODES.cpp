@@ -7,6 +7,7 @@ static const char quizChars[] = {
   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
   'U', 'V', 'W', 'X', 'Y', 'Z'
 };
+
 static const int numQuizChars = sizeof(quizChars) / sizeof(quizChars[0]);
 
 static const char* dictLetters[] = {

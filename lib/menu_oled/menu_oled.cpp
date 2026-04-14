@@ -22,7 +22,7 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
     int enter = digitalRead(ENTER);
     int back = digitalRead(BACK);
 
-    if (LOGIN != lastLogin) {
+    if (lastLogin != LOGIN) {
         Refresh = true;
         lastLogin = LOGIN;
     };
@@ -33,24 +33,27 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         Refresh = true;
         delay(200);
     };
+
     if (down == LOW) {
         selected = selected + 1;
         if(selected > 2) selected = 0;
         Refresh = true;
         delay(200);
-        };
+    };
+
     if (enter == LOW) {
-        if(LOGIN == -1){
+        if(LOGIN == -1){ // the main menu
             LOGIN = selected;
             selected = 0;
-        } else if(LOGIN == 0){
-            if(selected == 0) LOGIN = 10;
-            if(selected == 1) LOGIN = 11;
+        } else if(LOGIN == 0){  // the first option
+            if(selected == 0) LOGIN = 10; // the first subOption
+            if(selected == 1) LOGIN = 11; // the second subOption
             selected = 0;
         }
         Refresh = true;
         delay(200);
     };
+
     if (back == LOW) {
         if(LOGIN < 10){
             LOGIN = -1;
@@ -59,14 +62,18 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
             delay(200);
         }
     };
+
     if(Refresh == false) return;
+    else {
+        display.clearDisplay();
+    }
     const char *options[3] = {
         " Send, get Morse",
         " Test Morse",
         " Study Morse"
     };
+
     if (LOGIN == -1) {
-        display.clearDisplay();
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
         display.setCursor(0, 0);
@@ -83,31 +90,29 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         display.println("");
         }
         display.display();
-    }
-    else if (LOGIN == 0) {
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.println(F("Send/Get:"));
-        display.println("");
-        const char *subOptions[2] = {
-            " Send Morse",
-            " Get Morse",
-        };
-        for(int i = 0; i < 2; i++){
-            if(i == (selected % 2)) {
-            display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-            display.println(subOptions[i]);
-            display.println("");
-            } else {
+    }   else if (LOGIN == 0) {
+            display.setTextSize(1);
             display.setTextColor(SSD1306_WHITE);
-            display.println(subOptions[i]);
+            display.setCursor(0, 0);
+            display.println(F("Send/Get:"));
             display.println("");
+            const char *subOptions[2] = {
+                " Send Morse",
+                " Get Morse",
+            };
+            for(int i = 0; i < 2; i++){
+                if(i == (selected % 2)) {
+                display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+                display.println(subOptions[i]);
+                display.println("");
+                } else {
+                display.setTextColor(SSD1306_WHITE);
+                display.println(subOptions[i]);
+                display.println("");
+                }
+                display.println("");
             }
-            display.println("");
+            display.display();
         }
-        display.display();
-    }
     Refresh = false;
 }

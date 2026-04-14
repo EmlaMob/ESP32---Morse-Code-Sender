@@ -6,8 +6,9 @@
 #include <SETTING_TEXT.h>
 #include <string.h>
 #include <MORSE_MODES.h>
-
-
+#include <RF24.h>
+#include <printf.h>
+#include <SPI.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -140,7 +141,7 @@ void loop() {
                 isSendPending = false;
             }
         }
-        if(buttonState == HIGH && gap > 2000 && strlen(sendText) > 0 && sendText[strlen(sendText) - 1] != '/'){
+        if(buttonState == HIGH && gap > 1750 && strlen(sendText) > 0 && sendText[strlen(sendText) - 1] != '/'){
             int textLen = strlen(sendText);
             if(textLen < 99){
                 sendText[textLen] = '/';
