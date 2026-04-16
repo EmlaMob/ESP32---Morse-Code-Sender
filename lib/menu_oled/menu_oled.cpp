@@ -1,4 +1,5 @@
 #include "MENU_OLED.h"
+#include <SETTING_TEXT.h>
 
 #define UP 14
 #define DOWN 12
@@ -26,93 +27,94 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         Refresh = true;
         lastLogin = LOGIN;
     };
-
-    if (up == LOW) {
-        selected = selected - 1;
-        if(selected < 0) selected = 2;
-        Refresh = true;
-        delay(200);
-    };
-
-    if (down == LOW) {
-        selected = selected + 1;
-        if(selected > 2) selected = 0;
-        Refresh = true;
-        delay(200);
-    };
-
-    if (enter == LOW) {
-        if(LOGIN == -1){ // the main menu
-            LOGIN = selected;
-            selected = 0;
-        } else if(LOGIN == 0){  // the first option
-            if(selected == 0) LOGIN = 10; // the first subOption
-            if(selected == 1) LOGIN = 11; // the second subOption
-            selected = 0;
+    static unsigned long lastButtonTime = 0;
+    if(millis() - lastButtonTime > 200){
+        if (up == LOW) {
+            selected = selected - 1;
+            if(selected < 0) selected = 2;
+            lastButtonTime = millis();
         }
-        Refresh = true;
-        delay(200);
-    };
 
-    if (back == LOW) {
-        if(LOGIN < 10){
-            LOGIN = -1;
-            selected = 0;
-            Refresh = true;
-            delay(200);
+        else if (down == LOW) {
+            selected = selected + 1;
+            if(selected > 2) selected = 0;
+            lastButtonTime = millis();
         }
-    };
 
-    if(Refresh == false) return;
-    else {
-        display.clearDisplay();
+        else if (enter == LOW) {
+            if(LOGIN == -1){ // the main menu
+                LOGIN = selected;
+                selected = 0;
+            } else if(LOGIN == 0){  // the first option
+                if(selected == 0) LOGIN = 10; // the first subOption
+                if(selected == 1) LOGIN = 11; // the second subOption
+                selected = 0;
+            }
+            lastButtonTime = millis();
+        }
+
+        else if (back == LOW) {
+            if(LOGIN < 10){
+                LOGIN = -1;
+                selected = 0;
+            }
+            lastButtonTime = millis();
+        }
     }
+
     const char *options[3] = {
-        " Send, get Morse",
+        " Transmit, Receive Morse",
         " Test Morse",
         " Study Morse"
     };
 
     if (LOGIN == -1) {
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(SSD1306_WHITE);
+        display.setCursor(0, 0);
+        display.println(F("Select Mode:"));
+        int currentY = 16;
+        display.println("");
+
+        for (int i = 0; i < 3; i++) {
+        if (i == selected) {
+            display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+            printSlide(display, options[i], currentY);
+        } else if (i != selected) {
+            display.setTextWrap(false);
+            display.setTextColor(SSD1306_WHITE);
+            display.setCursor(0, currentY);
+            display.print(options[i]);
+            display.setTextWrap(true);
+        }
+        currentY += 16;
+        }
+        display.display();
+    }   
+    else if (LOGIN == 0) {
+        display.clearDisplay();
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
         display.setCursor(0, 0);
         display.println(F("Choose Mode:"));
         display.println("");
-        for (int i = 0; i < 3; i++) {
-        if (i == selected) {
+        const char *subOptions[2] = {
+            " Transmit Morse",
+            " Receive Morse",
+        };
+        int currentY = 16;
+        for(int i = 0; i < 2; i++){
+            if(i == (selected % 2)) {
             display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-            display.println(options[i]);
-        } else if (i != selected) {
+            printSlide(display, subOptions[i], currentY);
+            } else {
             display.setTextColor(SSD1306_WHITE);
-            display.println(options[i]);
-        }
-        display.println("");
+            display.setCursor(0, currentY);
+            display.println(subOptions[i]);
+            }
+            currentY += 16;
         }
         display.display();
-    }   else if (LOGIN == 0) {
-            display.setTextSize(1);
-            display.setTextColor(SSD1306_WHITE);
-            display.setCursor(0, 0);
-            display.println(F("Send/Get:"));
-            display.println("");
-            const char *subOptions[2] = {
-                " Send Morse",
-                " Get Morse",
-            };
-            for(int i = 0; i < 2; i++){
-                if(i == (selected % 2)) {
-                display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-                display.println(subOptions[i]);
-                display.println("");
-                } else {
-                display.setTextColor(SSD1306_WHITE);
-                display.println(subOptions[i]);
-                display.println("");
-                }
-                display.println("");
-            }
-            display.display();
-        }
-    Refresh = false;
+    }
 }

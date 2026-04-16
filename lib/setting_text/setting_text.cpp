@@ -69,3 +69,45 @@ void printDecodeText(Adafruit_SSD1306 &display, const char* text, int startY) {
         }
     }
 }
+
+void printSlide(Adafruit_SSD1306 &display, const char* text, int y){
+    int16_t x1, y1;
+    uint16_t w, h;
+    display.setTextWrap(false);
+    display.setTextSize(1);
+    display.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+    
+    if(w <= SCREEN_WIDTH){
+        display.setCursor(0, y);
+        display.print(text);
+        display.setTextWrap(true);
+        return;
+    }
+    
+    static int16_t scrollX = 0;
+    static unsigned long lastScrollTime = 0;
+    static char lastText[100] = "";
+
+    if (strcmp(text, lastText) != 0) {
+        strncpy(lastText, text, 99);
+        lastText[99] = '\0';
+        scrollX = 0; 
+    }
+    
+    int loopWidth = w;
+
+    if (millis() - lastScrollTime > 75) { 
+        scrollX -= 1;
+        if (scrollX <= -loopWidth) {
+            scrollX += loopWidth; 
+        }
+        lastScrollTime = millis();
+    }
+    display.setCursor(scrollX, y);
+    display.print(text);
+    
+    display.setCursor(scrollX + loopWidth, y);
+    display.print(text);
+
+    display.setTextWrap(true);
+}

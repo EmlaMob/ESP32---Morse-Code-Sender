@@ -1,20 +1,8 @@
 #include "MORSE_MODES.h"
 #include "SETTING_TEXT.h"
 #include <string.h>
+#include "MORSE_DICT.h"
 
-static const char quizChars[] = {
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
-  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
-  'U', 'V', 'W', 'X', 'Y', 'Z'
-};
-
-static const int numQuizChars = sizeof(quizChars) / sizeof(quizChars[0]);
-
-static const char* dictLetters[] = {
-  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",
-  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", 
-  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
-};
 static int testQuizIndex = -1;  
 static int studyQuizIndex = -1;
 
@@ -101,7 +89,7 @@ void runTestMode(Adafruit_SSD1306 &display, int &LOGIN, int pinMorse, int pinEra
         int letterIndex = quizChars[testQuizIndex] - 'A';
         
         display.clearDisplay();
-        if (strcmp(currentInput, dictLetters[letterIndex]) == 0) {
+        if (strcmp(currentInput, letters[letterIndex]) == 0) {
             printCenter(display, "Correct!", 20, 2);
             int newIndex = testQuizIndex;
             while(newIndex == testQuizIndex) {
@@ -152,7 +140,7 @@ void runStudyMode(Adafruit_SSD1306 &display, int &LOGIN, int pinMorse, int pinEr
         display.setCursor(0, 35);
         display.print("Enter: ");
         display.setCursor(40, 35);
-        display.println(dictLetters[letterIndex]);
+        display.println(letters[letterIndex]);
 
         display.setCursor(0, 50);
         display.print("You entered: ");
@@ -194,7 +182,7 @@ void runStudyMode(Adafruit_SSD1306 &display, int &LOGIN, int pinMorse, int pinEr
         int letterIndex = quizChars[studyQuizIndex] - 'A';
         
         display.clearDisplay();
-        if (strcmp(currentInput, dictLetters[letterIndex]) == 0) {
+        if (strcmp(currentInput, letters[letterIndex]) == 0) {
             printCenter(display, "GOOD!", 20, 2);
             int newIndex = studyQuizIndex;
             while(newIndex == studyQuizIndex) {

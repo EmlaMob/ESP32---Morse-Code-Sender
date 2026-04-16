@@ -9,13 +9,14 @@
 #include <RF24.h>
 #include <printf.h>
 #include <SPI.h>
+#include <MORSE_DICT.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define SCREEN_ADDRESS 0x3C
 
-#define LED_PIN 18
-#define BUZZER_PIN 19
+#define LED_PIN 16
+#define BUZZER_PIN 17
 #define B_MORSE 25
 #define ERASE 13
 
@@ -32,23 +33,33 @@ char sendText[100] = "";
 unsigned long sendReleaseTime = 0; 
 bool isSendPending = false;
 
-
-char getCode[10] = "";
 char decodedText[100] = "";
-unsigned long getRealseTime = 0;
-bool isGetPending = false;
 
-const char* letters[] = {
-  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",
-  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", 
-  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
-};
 
-const char* numbers[] = {
-  "-----", ".----", "..---", "...--", "....-",
-  ".....", "-....", "--...", "---..", "----."
-};
+RF24 radio(4, 5);
+const byte address[6] = {"00001"};
+bool hasRadio = false;
 
+void playMorseChar(char c) {
+    const char* pattern = NULL;
+    if (c >= 'A' && c <= 'Z') pattern = letters[c - 'A'];
+    else if (c >= '0' && c <= '9') pattern = numbers[c - '0'];
+    else if (c == '/') { delay(1750); return; }
+
+    if (pattern) {
+        for (int i = 0; pattern[i] != '\0'; i++) {
+            digitalWrite(LED_PIN, HIGH);
+            digitalWrite(BUZZER_PIN, HIGH);
+            if (pattern[i] == '.') delay(250);
+            else if (pattern[i] == '-') delay(750);
+            
+            digitalWrite(LED_PIN, LOW);
+            digitalWrite(BUZZER_PIN, LOW);
+            delay(150);
+        }
+        delay(300);
+    }
+}
 
 void setup() {
     setupMenuPins();
@@ -56,8 +67,24 @@ void setup() {
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUZZER_PIN, OUTPUT);
     pinMode(B_MORSE, INPUT_PULLUP);
+
+
+    if(!radio.begin()){
+        Serial.println(F("radio hardware not responding."));
+        hasRadio = false;
+    }
+    else {
+        radio.setPALevel(RF24_PA_HIGH);
+        radio.setDataRate(RF24_1MBPS);
+        radio.setChannel(124);
+
+        radio.openWritingPipe(address);
+        radio.openReadingPipe(1, address);
+    }
+    
+
+
     Serial.begin(115200);
-    Wire.setClock(400000);
     if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
         Serial.println(F("SSD1306 allocation failed"));
         for(;;);
@@ -72,7 +99,8 @@ void setup() {
 void loop() {
     displayMenu(display, LOGIN);
 
-    if(LOGIN == 10){ 
+    if(LOGIN == 10){
+        radio.stopListening();
         int buttonState = digitalRead(B_MORSE);
         if(digitalRead(ERASE) == LOW){
             if(strlen(sendText) > 0 || strlen(sendCode) > 0){
@@ -113,9 +141,10 @@ void loop() {
             }
             delay(20);
         }
+
         unsigned long gap = millis() - sendReleaseTime;
         if(buttonState == HIGH && isSendPending == true) {
-            if(gap > 750 && sendCode != ""){
+            if(gap > 750 && strlen(sendCode) > 0){
                 char decodedChar = '?';
 
                 for(int i = 0; i < 26; i++) {
@@ -136,16 +165,23 @@ void loop() {
                 if(textLen < 99) {
                     sendText[textLen] = decodedChar;
                     sendText[textLen+1] = '\0';
+                    if (hasRadio) { 
+                        radio.write(&sendText, sizeof(sendText));
+                    }
                 }
                 sendCode[0] = '\0';
                 isSendPending = false;
             }
         }
+
         if(buttonState == HIGH && gap > 1750 && strlen(sendText) > 0 && sendText[strlen(sendText) - 1] != '/'){
             int textLen = strlen(sendText);
             if(textLen < 99){
                 sendText[textLen] = '/';
                 sendText[textLen+1] = '\0';
+                if (hasRadio) { 
+                    radio.write(&sendText, sizeof(sendText));
+                }
             }
             sendReleaseTime = millis();
         }
@@ -153,95 +189,39 @@ void loop() {
         display.setTextSize(1);
         display.setCursor(0,0);
         display.setTextColor(SSD1306_WHITE);
-        display.println("Sending:");
+        display.println("Transmitting:");
         printCenter(display, sendCode, 10, 2);
         printDecodeText(display, sendText, 30);
         display.display();
     }
     else if (LOGIN == 11) {
-        int buttonState = digitalRead(B_MORSE);
+        radio.startListening();
+        static int lastLen = 0;
         if(digitalRead(ERASE) == LOW){
-            if(strlen(decodedText) > 0 || strlen(getCode) > 0){
+            if(strlen(decodedText) > 0){
                 decodedText[0] = '\0';
-                getCode[0] = '\0';
-                isGetPending = false;
+                lastLen = 0;
                 delay(200);
             }   else {
                 LOGIN = 0;
                 delay(200);
             }
         }
-        if(buttonState == LOW && isPress == false){
-            isPress = true;
-            Press = millis();
-            digitalWrite(LED_PIN, HIGH);
-            digitalWrite(BUZZER_PIN, HIGH);
-            delay(20);
-        }
-        else if(buttonState == HIGH && isPress == true){
-            isPress = false;
-            digitalWrite(LED_PIN, LOW);
-            digitalWrite(BUZZER_PIN, LOW);
-            unsigned long duration = millis() - Press;
-            getRealseTime = millis();
-            isGetPending = true;
-
-            int len = strlen(getCode);
-            if(len < 9) {
-                if(duration > 20 && duration < 250) {
-                    getCode[len] = '.';
-                    getCode[len+1] = '\0';
-                }
-                else if(duration >= 250) {
-                    getCode[len] = '-';
-                    getCode[len+1] = '\0';
-                }
+        if(radio.available()){
+            radio.read(&decodedText, sizeof(decodedText));
+            int currentLen = strlen(decodedText);
+            if(currentLen > lastLen){
+                char newChar = decodedText[currentLen-1];
+                playMorseChar(newChar);
+                lastLen = currentLen;
             }
-            delay(20);
-        }
-        unsigned long gap = millis() - getRealseTime;
-        if(buttonState == HIGH && isGetPending == true) {
-            if(gap > 750 && strlen(getCode) > 0){
-                char decodedChar = '?';
-
-                for(int i = 0; i < 26; i++) {
-                    if(strcmp(getCode, letters[i]) == 0){
-                        decodedChar = i + 'A';
-                        break; 
-                    }
-                }
-                if(decodedChar == '?') {
-                    for(int i = 0; i < 10; i++) {
-                        if(strcmp(getCode, numbers[i]) == 0){
-                            decodedChar = i + '0';
-                            break;
-                        }
-                    }
-                }
-                int textLen = strlen(decodedText);
-                if(textLen < 99) {
-                    decodedText[textLen] = decodedChar;
-                    decodedText[textLen+1] = '\0';
-                }
-                getCode[0] = '\0';
-                isGetPending = false;
-            }
-        }
-        if(buttonState == HIGH && gap > 2000 && strlen(decodedText) > 0 && decodedText[strlen(decodedText) - 1] != '/'){
-            int textLen = strlen(decodedText);
-            if(textLen < 99){
-                decodedText[textLen] = '/';
-                decodedText[textLen+1] = '\0';
-            }
-            getRealseTime = millis();
         }
         display.clearDisplay();
         display.setTextSize(1);
-        display.setCursor(0,0);
+        display.setCursor(0, 0);
         display.setTextColor(SSD1306_WHITE);
-        display.println("Getting:");
-        printCenter(display, getCode, 10, 2);
-        printDecodeText(display, decodedText, 30);
+        display.println("Receiving:");
+        printSlide(display, decodedText, 30);
         display.display();
     }
     else if (LOGIN == 1) {
@@ -256,8 +236,6 @@ void loop() {
         isSendPending = false;
     }
     if(LOGIN != 11) {
-        getCode[0] = '\0';
         decodedText[0] = '\0';
-        isGetPending = false;
     }
 }

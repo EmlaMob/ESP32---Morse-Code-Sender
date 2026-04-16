@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
 
+void printSlide(Adafruit_SSD1306 &display, const char* text, int y);
 void printCenter(Adafruit_SSD1306 &display, const char* text, int y, int textSize);
 void printDecodeText(Adafruit_SSD1306 &display, const char* text, int startY);
 
