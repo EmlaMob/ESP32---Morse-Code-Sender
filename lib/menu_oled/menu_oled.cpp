@@ -31,13 +31,19 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
     if(millis() - lastButtonTime > 200){
         if (up == LOW) {
             selected = selected - 1;
-            if(selected < 0) selected = 2;
+            if (LOGIN == 0) {
+                if(selected < 0) selected = 1;
+            }
+            if (selected < 0) selected = 2;
             lastButtonTime = millis();
         }
 
         else if (down == LOW) {
             selected = selected + 1;
-            if(selected > 2) selected = 0;
+            if (LOGIN == 0) {
+                if(selected > 1) selected = 0;
+            }
+            if (selected > 2) selected = 0;
             lastButtonTime = millis();
         }
 
@@ -103,7 +109,7 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
             " Transmit Morse",
             " Receive Morse",
         };
-        int currentY = 16;
+        int currentY = 22;
         for(int i = 0; i < 2; i++){
             if(i == (selected % 2)) {
             display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
@@ -113,7 +119,7 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
             display.setCursor(0, currentY);
             display.println(subOptions[i]);
             }
-            currentY += 16;
+            currentY += 22;
         }
         display.display();
     }
