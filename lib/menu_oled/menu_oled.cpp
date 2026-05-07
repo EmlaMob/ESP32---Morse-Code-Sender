@@ -48,12 +48,12 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         }
 
         else if (enter == LOW) {
-            if(LOGIN == -1){ // the main menu
+            if(LOGIN == -1){
                 LOGIN = selected;
                 selected = 0;
-            } else if(LOGIN == 0){  // the first option
-                if(selected == 0) LOGIN = 10; // the first subOption
-                if(selected == 1) LOGIN = 11; // the second subOption
+            } else if(LOGIN == 0){
+                if(selected == 0) LOGIN = 10;
+                if(selected == 1) LOGIN = 11;
                 selected = 0;
             }
             lastButtonTime = millis();
