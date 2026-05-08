@@ -80,8 +80,8 @@ void displayMenu(Adafruit_SSD1306 &display, int &LOGIN){
         display.setTextColor(SSD1306_WHITE);
         display.setCursor(0, 0);
         display.println(F("Select Mode:"));
-        int currentY = 16;
         display.println("");
+        int currentY = 16;
 
         for (int i = 0; i < 3; i++) {
         if (i == selected) {
