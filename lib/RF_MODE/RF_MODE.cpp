@@ -20,14 +20,15 @@ void playMorseChar(char c, int LED_PIN, int BUZZER_PIN){
         {
             if (pattern[i] == '.'){
                 digitalWrite(LED_PIN, HIGH);
-                tone(BUZZER_PIN, 1000, 250);
+                tone(BUZZER_PIN, 1000);
                 delay(250);
             }
             else if (pattern[i] == '-'){
                 digitalWrite(LED_PIN, HIGH);
-                tone(BUZZER_PIN, 1000, 750);
+                tone(BUZZER_PIN, 1000);
                 delay(750);
             }
+            noTone(BUZZER_PIN);
             digitalWrite(LED_PIN, LOW);
             delay(150);
         }

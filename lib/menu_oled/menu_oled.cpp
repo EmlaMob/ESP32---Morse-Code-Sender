@@ -1,9 +1,9 @@
 #include "MENU_OLED.h"
 #include <SETTING_TEXT.h>
 
-#define UP 14
-#define DOWN 12
-#define ENTER 27
+#define UP 27
+#define DOWN 14
+#define ENTER 12
 #define BACK 13
 
 static int selected = 0;

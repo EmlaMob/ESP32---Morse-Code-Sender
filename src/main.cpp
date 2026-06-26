@@ -20,10 +20,16 @@
 #define B_MORSE 25
 #define ERASE 13
 
+
+const int NODE_ID = 1; // Change this to 2 for the second node
+
+
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 int LOGIN = -1;
 RF24 radio(4, 5);
-const byte address[6] = "00001";
+const byte address[6] = "NODE1";
+const byte address2[6] = "NODE2";
 bool hasRadio = false;
 
 
@@ -47,8 +53,15 @@ void setup()
         radio.setPALevel(RF24_PA_LOW);
         radio.setDataRate(RF24_1MBPS);
         radio.setChannel(124);
-        radio.openWritingPipe(address);
-        radio.openReadingPipe(1, address);
+        if (NODE_ID == 1) {
+            radio.openWritingPipe(address);
+            radio.openReadingPipe(1, address2);
+        } 
+        else if (NODE_ID == 2) {
+            radio.openWritingPipe(address2);
+            radio.openReadingPipe(1, address);
+        }
+        radio.startListening();
     }
 
     if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)){
