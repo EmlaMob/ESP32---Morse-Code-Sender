@@ -30,7 +30,7 @@ int LOGIN = -1;
 RF24 radio(4, 5);
 const byte address[6] = "NODE1";
 const byte address2[6] = "NODE2";
-bool hasRadio = false;
+bool hasRadio = false; 
 
 
 void setup()
@@ -51,7 +51,7 @@ void setup()
     {
         hasRadio = true;
         radio.setPALevel(RF24_PA_LOW);
-        radio.setDataRate(RF24_1MBPS);
+        radio.setDataRate(RF24_250KBPS);
         radio.setChannel(124);
         if (NODE_ID == 1) {
             radio.openWritingPipe(address);
