@@ -30,8 +30,8 @@ void printDecodeText(Adafruit_SSD1306 &display, const char* text, int startY) {
 
     int startIdx = 0;
     while (startIdx < len) {
-        const char* slashPtr = strchr(text + startIdx, '/');
-        int delimIdx = (slashPtr) ? (slashPtr - text) : -1;
+        const char* spacePtr = strchr(text + startIdx, ' ');
+        int delimIdx = (spacePtr) ? (spacePtr - text) : -1;
 
         int wordLen;
         bool hasDelim = false;
@@ -61,7 +61,7 @@ void printDecodeText(Adafruit_SSD1306 &display, const char* text, int startY) {
                 currentY += lineHeight;
             }
             display.setCursor(currentX, currentY);
-            display.print("/");
+            display.print(" ");
             currentX += charWidth;
             startIdx = delimIdx + 1;
         }   else {
